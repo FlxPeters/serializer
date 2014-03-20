@@ -156,6 +156,13 @@ final class GraphNavigator
                         $this->dispatcher->dispatch('serializer.pre_serialize', $type['name'], $context->getFormat(), $event = new PreSerializeEvent($context, $data, $type));
                         $type = $event->getType();
                     }
+                    // If we're serializing a polymorphic type, then we'll be interested in the
+                    // metadata for the actual type of the object, not the base class.
+                    if (class_exists($type['name'], false)) {
+                        if (is_subclass_of($data, $type['name'], false)) {
+                            $type = array('name' => get_class($data), 'params' => array());
+                        }
+                    }
                 } elseif ($context instanceof DeserializationContext) {
                     if (null !== $this->dispatcher && $this->dispatcher->hasListeners('serializer.pre_deserialize', $type['name'], $context->getFormat())) {
                         $this->dispatcher->dispatch('serializer.pre_deserialize', $type['name'], $context->getFormat(), $event = new PreDeserializeEvent($context, $data, $type));
